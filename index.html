@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Your Own Planet</title>
+<style>
+  :root{
+    --ink:#1c2430; --muted:#5a6572; --accent:#0b5cad; --accent-dark:#084a8a;
+    --card:#ffffff; --bg:#eef2f6; --line:#d4dce4; --soft:#f4f8fc;
+    --purple:#7b2dbe; --purple-dark:#5f1f96; --note:#fff3b0; --note-line:#e3d488;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.45;}
+  .wrap{max-width:860px;margin:0 auto;padding:16px 14px 48px;}
+  header{margin:10px 0 6px;}
+  h1{font-size:1.7rem;margin:0 0 2px;}
+  h2{font-size:1.25rem;margin:0 0 4px;}
+  .subtitle{color:var(--muted);font-size:1rem;margin:0 0 10px;}
+  .intro{font-size:1.02rem;margin:0 0 10px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:16px;margin:14px 0;box-shadow:0 1px 3px rgba(20,40,60,.06);}
+  .starter{color:var(--muted);margin:0 0 12px;}
+  label.fieldlabel{display:block;font-weight:600;margin:12px 0 4px;}
+  label.fieldlabel:first-child{margin-top:0;}
+  input[type=text].field{width:100%;padding:9px 10px;font:inherit;font-size:1rem;
+    border:1px solid var(--line);border-radius:8px;min-height:44px;}
+  textarea{width:100%;padding:9px 10px;font:inherit;font-size:1rem;border:1px solid var(--line);
+    border-radius:8px;min-height:84px;resize:vertical;}
+  .idearow{display:flex;gap:8px;align-items:center;margin:8px 0;}
+  .idearow input[type=text]{flex:1 1 auto;min-width:0;padding:9px 10px;font:inherit;font-size:1rem;
+    border:1px solid var(--line);border-radius:8px;min-height:44px;}
+  button{cursor:pointer;font:inherit;border:1px solid var(--accent);background:var(--accent);color:#fff;
+    padding:9px 16px;border-radius:8px;min-height:44px;font-weight:600;}
+  button:hover{background:var(--accent-dark);}
+  button.secondary{background:#fff;color:var(--accent);}
+  button.secondary:hover{background:var(--soft);}
+  button.remove{background:#fff;color:#b3261e;border-color:#d8a49f;padding:9px 12px;flex:0 0 auto;}
+  button.remove:hover{background:#fdf2f1;}
+  button:disabled{opacity:.5;cursor:default;}
+  button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{
+    outline:3px solid #f2b01e;outline-offset:2px;}
+  .addrow{margin-top:10px;}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 0;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 8px;}
+  .chip{background:#fff;color:var(--ink);border:2px solid var(--line);border-radius:999px;
+    padding:9px 14px;font-weight:600;min-height:44px;}
+  .chip:hover{border-color:var(--purple);}
+  .chip[aria-pressed="true"]{background:var(--purple);border-color:var(--purple);color:#fff;}
+  .checklist{list-style:none;margin:6px 0 0;padding:0;}
+  .checklist li{margin:8px 0;padding-left:34px;position:relative;font-size:1.02rem;}
+  .checklist .box{position:absolute;left:0;top:0;width:24px;height:24px;border:2px solid var(--line);
+    border-radius:6px;display:inline-flex;align-items:center;justify-content:center;
+    font-weight:700;color:#1e8a4c;background:#fff;}
+  .checklist li.done .box{border-color:#1e8a4c;background:#eafaf0;}
+  .checklist li.done{color:var(--muted);}
+  .drawtools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0 10px;}
+  .swatch{width:40px;height:40px;min-height:40px;border-radius:50%;border:3px solid #fff;
+    box-shadow:0 0 0 2px var(--line);padding:0;}
+  .swatch[aria-pressed="true"]{box-shadow:0 0 0 3px var(--ink);}
+  .sizebtn{background:#fff;color:var(--ink);border:2px solid var(--line);min-height:40px;padding:6px 12px;}
+  .sizebtn[aria-pressed="true"]{border-color:var(--ink);background:var(--soft);}
+  canvas.pad{width:100%;height:auto;background:#fff;border:2px solid var(--line);border-radius:10px;
+    touch-action:none;display:block;}
+  .note-row{display:flex;gap:8px;align-items:flex-start;margin:8px 0;}
+  .note-row textarea{flex:1 1 auto;min-width:0;background:var(--note);border:1px solid var(--note-line);
+    min-height:56px;box-shadow:0 2px 3px rgba(20,40,60,.12);}
+  .note-row .remove{margin-top:2px;}
+  .moonrow{display:flex;gap:10px;align-items:center;margin:8px 0;}
+  .mooncirc{flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:2px solid var(--purple);
+    background:radial-gradient(circle at 35% 35%, #fdfaff, #d9c8f5);display:inline-flex;
+    align-items:center;justify-content:center;font-weight:700;color:var(--purple-dark);}
+  .moonrow input[type=text]{flex:1 1 auto;min-width:0;padding:9px 10px;font:inherit;font-size:1rem;
+    border:1px solid var(--line);border-radius:8px;min-height:44px;}
+  .checkline{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;font-size:1.02rem;}
+  .checkline input[type=checkbox]{width:22px;height:22px;margin-top:2px;flex:0 0 auto;}
+  .radios{display:flex;flex-direction:column;gap:8px;margin:6px 0;}
+  .radios label{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);
+    border-radius:8px;padding:10px 12px;cursor:pointer;background:#fff;}
+  .radios label:hover{border-color:var(--purple);}
+  .radios input[type=radio]{width:20px;height:20px;margin-top:2px;flex:0 0 auto;}
+  input[type=range]{width:100%;min-height:44px;}
+  .sizeviz{display:flex;justify-content:center;margin:8px 0;}
+  .stepper{display:inline-flex;align-items:center;gap:12px;margin:6px 0;}
+  .stepper button{width:44px;padding:9px 0;}
+  .stepper .count{font-size:1.2rem;font-weight:700;min-width:2ch;text-align:center;}
+  .summary h2{margin-top:0;}
+  .summary h3{margin:16px 0 4px;font-size:1.05rem;}
+  .summary p.answer{margin:4px 0;white-space:pre-wrap;}
+  .summary ul{margin:4px 0 0;padding-left:22px;}
+  .summary li{margin:3px 0;}
+  .planet-name{font-size:1.4rem;color:var(--purple-dark);margin:0 0 2px;}
+  .drawing-img{max-width:100%;height:auto;border:2px solid var(--line);border-radius:10px;background:#fff;}
+  .empty-note{color:var(--muted);font-style:italic;}
+  .copied{color:var(--accent-dark);font-weight:600;min-height:1.3em;margin:10px 0 0;}
+  .hidden{display:none !important;}
+  @media (max-width:560px){
+    h1{font-size:1.4rem;}
+    button.remove span.word{display:none;}
+  }
+  @media print{
+    body{background:#fff;}
+    .no-print{display:none !important;}
+    .card{box-shadow:none;border-color:#999;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Design Your Own Planet</h1>
+    <p class="subtitle">Grade 9 STEAM, Beyond Our Planet, Lesson 6: The Planets in our Solar System (Extension Activity)</p>
+    <p class="intro">In this activity, you get to design a planet of your very own. Work through each section below: fill in your planet's birth certificate, decide what it looks like and what it is made of, and choose where it belongs. Your design stays on this page: nothing is sent anywhere. When you finish, print or copy your planet profile to keep it with your work.</p>
+  </header>
+
+  <main id="board">
+    <section class="card" aria-labelledby="h-check">
+      <h2 id="h-check">Your design checklist</h2>
+      <p class="starter">Work through the list. Each item ticks itself off as you go.</p>
+      <ul class="checklist" id="checklist">
+        <li data-check="birth"><span class="box" aria-hidden="true"></span>I filled in my planet's birth certificate</li>
+        <li data-check="colour"><span class="box" aria-hidden="true"></span>I coloured my planet and described its colours</li>
+        <li data-check="temp"><span class="box" aria-hidden="true"></span>I set my planet's average temperature</li>
+        <li data-check="madeof"><span class="box" aria-hidden="true"></span>I decided what my planet is made of</li>
+        <li data-check="size"><span class="box" aria-hidden="true"></span>I sized my planet next to Earth</li>
+        <li data-check="moons"><span class="box" aria-hidden="true"></span>I added my planet's moons, or said it has none</li>
+        <li data-check="rings"><span class="box" aria-hidden="true"></span>I decided whether my planet has rings</li>
+        <li data-check="facts"><span class="box" aria-hidden="true"></span>I wrote interesting facts about my planet</li>
+        <li data-check="compare"><span class="box" aria-hidden="true"></span>I compared my planet to the inner and outer planets</li>
+        <li data-check="place"><span class="box" aria-hidden="true"></span>I placed my planet in our solar system or beyond</li>
+      </ul>
+    </section>
+
+    <section class="card" aria-labelledby="h-birth">
+      <h2 id="h-birth">Fill out your Planet's Birth Certificate</h2>
+      <label class="fieldlabel" for="planetName">Name of Planet</label>
+      <input type="text" class="field" id="planetName" placeholder="Give your planet a name..." autocomplete="off">
+      <label class="fieldlabel" for="planetDob">Date of Birth (How Many Years Ago)</label>
+      <input type="text" class="field" id="planetDob" placeholder="For example: 4 billion years ago" autocomplete="off">
+      <label class="fieldlabel" for="planetGalaxy">Galaxy of Birth</label>
+      <input type="text" class="field" id="planetGalaxy" placeholder="For example: the Milky Way, or a galaxy of your own" autocomplete="off">
+      <label class="fieldlabel" for="planetDiameter">Diameter Across (Km)</label>
+      <input type="text" class="field" id="planetDiameter" placeholder="For example: 12,742 (about the size of Earth)" autocomplete="off">
+    </section>
+
+    <section class="card" aria-labelledby="h-colour">
+      <h2 id="h-colour">What color is your planet?</h2>
+      <p class="starter">Use the paintbrushes below to add colour to your planet, right inside the circle. Then describe its colours.</p>
+      <div class="drawtools no-print" role="group" aria-label="Paint tools">
+        <span id="planetColors"></span>
+        <button type="button" class="sizebtn" data-psize="6" aria-pressed="false">Thin</button>
+        <button type="button" class="sizebtn" data-psize="16" aria-pressed="true">Medium</button>
+        <button type="button" class="sizebtn" data-psize="32" aria-pressed="false">Thick</button>
+        <button type="button" class="secondary" id="planetUndo">Undo</button>
+        <button type="button" class="secondary" id="planetClear">Clear painting</button>
+      </div>
+      <canvas id="planetPad" class="pad" width="680" height="440" aria-label="Painting area for your planet"></canvas>
+      <label class="fieldlabel" for="colourText">Describe the colours of your planet</label>
+      <textarea id="colourText" placeholder="What colours is your planet? What do the colours tell us about it?"></textarea>
+    </section>
+
+    <section class="card" aria-labelledby="h-temp">
+      <h2 id="h-temp">What is the average temperature of your planet?</h2>
+      <p class="starter">Is your planet hot or cold? What is the average temperature on your planet?</p>
+      <div class="chips" id="tempChips" role="group" aria-label="Hot or cold">
+        <button type="button" class="chip" data-value="Hot" aria-pressed="false">Hot</button>
+        <button type="button" class="chip" data-value="Cold" aria-pressed="false">Cold</button>
+        <button type="button" class="chip" data-value="Somewhere in between hot and cold" aria-pressed="false">Somewhere in between</button>
+      </div>
+      <label class="fieldlabel" for="tempText">Average temperature</label>
+      <input type="text" class="field" id="tempText" placeholder="For example: 25 degrees Celsius, or minus 60 degrees Celsius" autocomplete="off">
+    </section>
+
+    <section class="card" aria-labelledby="h-madeof">
+      <h2 id="h-madeof">What is your planet made of?</h2>
+      <p class="starter">Is your planet rocky like Earth or gaseous like Jupiter?</p>
+      <div class="chips" id="madeChips" role="group" aria-label="What my planet is made of">
+        <button type="button" class="chip" data-value="Rocky, like Earth" aria-pressed="false">Rocky, like Earth</button>
+        <button type="button" class="chip" data-value="Gaseous, like Jupiter" aria-pressed="false">Gaseous, like Jupiter</button>
+        <button type="button" class="chip" data-value="A mix of rock and gas" aria-pressed="false">A mix of rock and gas</button>
+      </div>
+      <label class="fieldlabel" for="madeText">Tell more about what your planet is made of</label>
+      <textarea id="madeText" placeholder="Describe the surface, the air or atmosphere, and anything else your planet is made of..."></textarea>
+    </section>
+
+    <section class="card" aria-labelledby="h-size">
+      <h2 id="h-size">What size is your planet?</h2>
+      <p class="starter">The picture of Earth represents the size of Earth. Move the slider to size your planet in comparison to Earth.</p>
+      <label class="fieldlabel" for="sizeSlider">My planet's size compared to Earth</label>
+      <input type="range" id="sizeSlider" min="1" max="12" step="1" value="4" aria-describedby="sizeReadout">
+      <p class="intro" id="sizeReadout" role="status">About the same size as Earth.</p>
+      <div class="sizeviz" aria-hidden="true">
+        <svg id="sizeSvg" width="340" height="190" viewBox="0 0 340 190" role="img" aria-label="Size comparison between Earth and your planet">
+          <circle cx="82" cy="88" r="45" fill="#2e6fd8"></circle>
+          <path d="M52 62 Q70 48 92 60 Q112 50 122 72 Q132 92 118 108 Q128 124 108 128 Q92 142 74 128 Q50 130 46 108 Q34 86 52 62 Z" fill="#2e9e4f"></path>
+          <circle id="sizePlanet" cx="248" cy="88" r="45" fill="#7b2dbe"></circle>
+          <text x="82" y="160" text-anchor="middle" font-size="15" fill="#1c2430">Earth</text>
+          <text x="248" y="160" text-anchor="middle" font-size="15" fill="#1c2430">My planet</text>
+        </svg>
+      </div>
+      <p class="starter" id="sizeNote"></p>
+    </section>
+
+    <section class="card" aria-labelledby="h-moons">
+      <h2 id="h-moons">Does your Planet have Moons?</h2>
+      <p class="starter">Add a circle for each moon your planet has, and name each of your planet's moons.</p>
+      <div id="moonList"></div>
+      <div class="addrow no-print">
+        <button type="button" class="secondary" id="addMoon">Add a moon</button>
+      </div>
+      <p class="checkline">
+        <input type="checkbox" id="noMoons">
+        <label for="noMoons">My planet has no moons</label>
+      </p>
+    </section>
+
+    <section class="card" aria-labelledby="h-rings">
+      <h2 id="h-rings">Does your planet have rings?</h2>
+      <div class="chips" id="ringChips" role="group" aria-label="Rings, yes or no">
+        <button type="button" class="chip" data-value="Yes" aria-pressed="false">Yes, it has rings</button>
+        <button type="button" class="chip" data-value="No" aria-pressed="false">No rings</button>
+      </div>
+      <div id="ringDetails" class="hidden">
+        <label class="fieldlabel" id="ringCountLabel">How many rings?</label>
+        <div class="stepper" role="group" aria-labelledby="ringCountLabel">
+          <button type="button" class="secondary" id="ringMinus" aria-label="One fewer ring">-</button>
+          <span class="count" id="ringCount" role="status">1</span>
+          <button type="button" class="secondary" id="ringPlus" aria-label="One more ring">+</button>
+        </div>
+        <div class="sizeviz" aria-hidden="true">
+          <svg id="ringSvg" width="300" height="150" viewBox="0 0 300 150" role="img" aria-label="Your planet with its rings">
+            <g id="ringGroup"></g>
+            <circle cx="150" cy="75" r="34" fill="#7b2dbe"></circle>
+          </svg>
+        </div>
+        <label class="fieldlabel" for="ringText">Describe your rings</label>
+        <textarea id="ringText" placeholder="What are your rings made of? What colours are they?"></textarea>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="h-facts">
+      <h2 id="h-facts">Interesting Facts about My Planet</h2>
+      <p class="starter">Use the sticky notes to write some interesting facts about your planet.</p>
+      <div id="factList"></div>
+      <div class="addrow no-print">
+        <button type="button" class="secondary" id="addFact">Add another fact</button>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="h-compare">
+      <h2 id="h-compare">Does your planet have characteristics of inner planets or outer planets?</h2>
+      <label class="fieldlabel" for="innerText">Characteristics of My Planet Similar to the Inner Planets</label>
+      <textarea id="innerText" placeholder="Inner planets are small, rocky, close to the Sun, and have few or no moons. What does your planet share with them?"></textarea>
+      <label class="fieldlabel" for="outerText">Characteristics of My Planet Similar to the Outer Planets</label>
+      <textarea id="outerText" placeholder="Outer planets are large, gaseous, far from the Sun, and often have rings and many moons. What does your planet share with them?"></textarea>
+    </section>
+
+    <section class="card" aria-labelledby="h-place">
+      <h2 id="h-place">Where does my Planet belong?</h2>
+      <p class="starter">Choose where you would place your planet, either in our solar system or beyond.</p>
+      <div class="radios" id="placeRadios" role="radiogroup" aria-label="Where my planet belongs">
+        <label><input type="radio" name="place" value="Closest to the Sun, inside the orbit of Mercury"> Closest to the Sun, inside the orbit of Mercury</label>
+        <label><input type="radio" name="place" value="With the inner planets (Mercury, Venus, Earth, and Mars)"> With the inner planets (Mercury, Venus, Earth, and Mars)</label>
+        <label><input type="radio" name="place" value="Between the inner planets and the outer planets"> Between the inner planets and the outer planets</label>
+        <label><input type="radio" name="place" value="With the outer planets (Jupiter, Saturn, Uranus, and Neptune)"> With the outer planets (Jupiter, Saturn, Uranus, and Neptune)</label>
+        <label><input type="radio" name="place" value="Beyond Neptune, at the edge of our solar system"> Beyond Neptune, at the edge of our solar system</label>
+        <label><input type="radio" name="place" value="Beyond our solar system, around another star"> Beyond our solar system, around another star</label>
+      </div>
+      <label class="fieldlabel" for="placeWhy">Why did you place your planet there?</label>
+      <textarea id="placeWhy" placeholder="Explain your choice. Think about temperature, size, and what your planet is made of..."></textarea>
+    </section>
+
+    <div class="actions no-print">
+      <button type="button" id="finishBtn">See my planet profile</button>
+    </div>
+  </main>
+
+  <section class="card summary hidden" id="summary" aria-labelledby="h-summary">
+    <h2 id="h-summary">My Planet Profile</h2>
+    <p class="subtitle">Grade 9 STEAM, Beyond Our Planet, Lesson 6: Design Your Own Planet</p>
+    <div id="summaryBody"></div>
+    <div class="actions no-print">
+      <button type="button" id="printBtn">Print</button>
+      <button type="button" class="secondary" id="copyBtn">Copy</button>
+      <button type="button" class="secondary" id="backBtn">Back to my planet</button>
+    </div>
+    <p class="copied" id="copyNote" role="status" aria-live="polite"></p>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var COLORS = [
+    { name: "Purple", value: "#7b2dbe" },
+    { name: "Blue", value: "#2e6fd8" },
+    { name: "Teal", value: "#0e8a7b" },
+    { name: "Green", value: "#2e9e4f" },
+    { name: "Yellow", value: "#f2b01e" },
+    { name: "Orange", value: "#e07b00" },
+    { name: "Red", value: "#c23b2e" },
+    { name: "Pink", value: "#d1345b" },
+    { name: "Brown", value: "#8a5a2b" },
+    { name: "Grey", value: "#7a8794" },
+    { name: "Black", value: "#1c2430" },
+    { name: "Eraser (back to white)", value: "#ffffff" }
+  ];
+
+  function val(id) { return document.getElementById(id).value.trim(); }
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+  }
+
+  /* Single-select chip groups */
+  function chipGroup(id) {
+    var box = document.getElementById(id);
+    Array.prototype.forEach.call(box.querySelectorAll(".chip"), function (chip) {
+      chip.addEventListener("click", function () {
+        Array.prototype.forEach.call(box.querySelectorAll(".chip"), function (c) {
+          c.setAttribute("aria-pressed", "false");
+        });
+        chip.setAttribute("aria-pressed", "true");
+        if (id === "ringChips") { updateRings(); }
+        updateChecklist();
+      });
+    });
+    return box;
+  }
+  function chipValue(box) {
+    var found = "";
+    Array.prototype.forEach.call(box.querySelectorAll(".chip"), function (chip) {
+      if (chip.getAttribute("aria-pressed") === "true") { found = chip.getAttribute("data-value"); }
+    });
+    return found;
+  }
+  var tempChips = chipGroup("tempChips");
+  var madeChips = chipGroup("madeChips");
+  var ringChips = chipGroup("ringChips");
+
+  /* Planet painting pad: strokes clipped inside the planet circle */
+  var pad = document.getElementById("planetPad");
+  var ctx = null;
+  try { ctx = pad.getContext("2d"); } catch (e) { ctx = null; }
+  var CX = pad.width / 2, CY = pad.height / 2, CR = 168;
+  var strokes = [];
+  var current = null;
+  var drawing = false;
+  var penColor = COLORS[0].value;
+  var penSize = 16;
+
+  function drawBase() {
+    if (!ctx) { return; }
+    ctx.fillStyle = "#101d33";
+    ctx.fillRect(0, 0, pad.width, pad.height);
+    ctx.fillStyle = "#ffffff";
+    for (var i = 0; i < 40; i++) {
+      var sx = (i * 173) % pad.width, sy = (i * 97) % pad.height;
+      if (Math.hypot(sx - CX, sy - CY) > CR + 14) { ctx.fillRect(sx, sy, 2.5, 2.5); }
+    }
+    ctx.beginPath();
+    ctx.arc(CX, CY, CR, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+  }
+  function redrawPad() {
+    if (!ctx) { return; }
+    drawBase();
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(CX, CY, CR, 0, Math.PI * 2);
+    ctx.clip();
+    strokes.forEach(function (s) {
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = s.size;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      s.points.forEach(function (p, i) {
+        if (i === 0) { ctx.moveTo(p.x, p.y); } else { ctx.lineTo(p.x, p.y); }
+      });
+      ctx.stroke();
+    });
+    ctx.restore();
+    ctx.beginPath();
+    ctx.arc(CX, CY, CR, 0, Math.PI * 2);
+    ctx.strokeStyle = "#1c2430";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  }
+  redrawPad();
+
+  var colorBox = document.getElementById("planetColors");
+  COLORS.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "swatch";
+    b.style.background = c.value;
+    b.setAttribute("aria-label", "Paint colour: " + c.name);
+    b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+    b.addEventListener("click", function () {
+      penColor = c.value;
+      Array.prototype.forEach.call(colorBox.querySelectorAll(".swatch"), function (s) {
+        s.setAttribute("aria-pressed", "false");
+      });
+      b.setAttribute("aria-pressed", "true");
+    });
+    colorBox.appendChild(b);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-psize]"), function (b) {
+    b.addEventListener("click", function () {
+      penSize = parseInt(b.getAttribute("data-psize"), 10);
+      Array.prototype.forEach.call(document.querySelectorAll("[data-psize]"), function (s) {
+        s.setAttribute("aria-pressed", "false");
+      });
+      b.setAttribute("aria-pressed", "true");
+    });
+  });
+
+  function padPos(evt) {
+    var rect = pad.getBoundingClientRect();
+    var rw = rect.width || pad.width;
+    var rh = rect.height || pad.height;
+    return {
+      x: (evt.clientX - rect.left) * (pad.width / rw),
+      y: (evt.clientY - rect.top) * (pad.height / rh)
+    };
+  }
+  pad.addEventListener("pointerdown", function (evt) {
+    if (!ctx) { return; }
+    drawing = true;
+    var p = padPos(evt);
+    current = { color: penColor, size: penSize, points: [p] };
+    strokes.push(current);
+    if (pad.setPointerCapture) { try { pad.setPointerCapture(evt.pointerId); } catch (e) {} }
+    redrawPad();
+    updateChecklist();
+    evt.preventDefault();
+  });
+  pad.addEventListener("pointermove", function (evt) {
+    if (!drawing || !current) { return; }
+    current.points.push(padPos(evt));
+    redrawPad();
+  });
+  function stopStroke() { drawing = false; current = null; }
+  pad.addEventListener("pointerup", stopStroke);
+  pad.addEventListener("pointercancel", stopStroke);
+  pad.addEventListener("pointerleave", stopStroke);
+  document.getElementById("planetUndo").addEventListener("click", function () {
+    strokes.pop();
+    redrawPad();
+    updateChecklist();
+  });
+  document.getElementById("planetClear").addEventListener("click", function () {
+    strokes = [];
+    redrawPad();
+    updateChecklist();
+  });
+
+  /* Size slider */
+  var SIZE_WORDS = { 1: "a quarter", 2: "half", 3: "three quarters", 4: "the same size", 5: "one and a quarter times", 6: "one and a half times", 8: "twice", 10: "two and a half times", 12: "three times" };
+  var sizeSlider = document.getElementById("sizeSlider");
+  var sizeTouched = false;
+  function sizeFactor() { return parseInt(sizeSlider.value, 10) / 4; }
+  function sizeText() {
+    var v = parseInt(sizeSlider.value, 10);
+    if (v === 4) { return "About the same size as Earth."; }
+    if (v < 4) { return "About " + SIZE_WORDS[v] + " the size of Earth."; }
+    return "About " + (SIZE_WORDS[v] || (v / 4) + " times") + " the size of Earth.";
+  }
+  function updateSize() {
+    var f = sizeFactor();
+    document.getElementById("sizeReadout").textContent = sizeText();
+    var r = 45 * f;
+    var shown = Math.min(r, 82);
+    document.getElementById("sizePlanet").setAttribute("r", shown);
+    document.getElementById("sizeNote").textContent = r > 82 ?
+      "Your planet is so big that the picture shows it a little smaller than true scale." : "";
+  }
+  sizeSlider.addEventListener("input", function () { sizeTouched = true; updateSize(); updateChecklist(); });
+  updateSize();
+
+  /* Moons */
+  var moonList = document.getElementById("moonList");
+  function moonNames() {
+    var names = [];
+    Array.prototype.forEach.call(moonList.querySelectorAll(".moonrow input"), function (input) {
+      var v = input.value.trim();
+      if (v) { names.push(v); }
+    });
+    return names;
+  }
+  function refreshMoons() {
+    var rows = moonList.querySelectorAll(".moonrow");
+    rows.forEach(function (row, i) {
+      row.querySelector(".mooncirc").textContent = String(i + 1);
+      var btn = row.querySelector(".remove");
+      if (btn) { btn.disabled = rows.length <= 1; }
+    });
+  }
+  function addMoonRow(focus) {
+    var row = document.createElement("div");
+    row.className = "moonrow";
+    var circ = document.createElement("span");
+    circ.className = "mooncirc";
+    circ.setAttribute("aria-hidden", "true");
+    var input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Name this moon...";
+    input.setAttribute("aria-label", "Moon name");
+    input.autocomplete = "off";
+    var remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "remove";
+    remove.innerHTML = "&#10005;<span class=\"word\"> Remove</span>";
+    remove.setAttribute("aria-label", "Remove this moon");
+    remove.addEventListener("click", function () {
+      if (moonList.querySelectorAll(".moonrow").length <= 1) { return; }
+      row.remove();
+      refreshMoons();
+      updateChecklist();
+    });
+    row.appendChild(circ);
+    row.appendChild(input);
+    row.appendChild(remove);
+    moonList.appendChild(row);
+    refreshMoons();
+    if (focus) { input.focus(); }
+    return row;
+  }
+  addMoonRow(false);
+  document.getElementById("addMoon").addEventListener("click", function () { addMoonRow(true); });
+  document.getElementById("noMoons").addEventListener("change", updateChecklist);
+
+  /* Rings */
+  var ringCount = 1;
+  function updateRings() {
+    var choice = chipValue(ringChips);
+    var details = document.getElementById("ringDetails");
+    details.classList.toggle("hidden", choice !== "Yes");
+    document.getElementById("ringCount").textContent = String(ringCount);
+    document.getElementById("ringMinus").disabled = ringCount <= 1;
+    document.getElementById("ringPlus").disabled = ringCount >= 5;
+    var g = document.getElementById("ringGroup");
+    var out = "";
+    for (var i = 0; i < ringCount; i++) {
+      out += "<ellipse cx=\"150\" cy=\"75\" rx=\"" + (52 + i * 11) + "\" ry=\"" + (15 + i * 4) +
+             "\" fill=\"none\" stroke=\"#c9932b\" stroke-width=\"5\"></ellipse>";
+    }
+    g.innerHTML = choice === "Yes" ? out : "";
+  }
+  document.getElementById("ringMinus").addEventListener("click", function () {
+    if (ringCount > 1) { ringCount--; updateRings(); }
+  });
+  document.getElementById("ringPlus").addEventListener("click", function () {
+    if (ringCount < 5) { ringCount++; updateRings(); }
+  });
+  updateRings();
+
+  /* Interesting facts: sticky note rows */
+  var factList = document.getElementById("factList");
+  function factValues() {
+    var values = [];
+    Array.prototype.forEach.call(factList.querySelectorAll(".note-row textarea"), function (ta) {
+      var v = ta.value.trim();
+      if (v) { values.push(v); }
+    });
+    return values;
+  }
+  function refreshFacts() {
+    var rows = factList.querySelectorAll(".note-row");
+    rows.forEach(function (row) {
+      var btn = row.querySelector(".remove");
+      if (btn) { btn.disabled = rows.length <= 1; }
+    });
+  }
+  function addFactRow(focus) {
+    var row = document.createElement("div");
+    row.className = "note-row";
+    var ta = document.createElement("textarea");
+    ta.placeholder = "Write one interesting fact...";
+    ta.setAttribute("aria-label", "An interesting fact about my planet");
+    var remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "remove";
+    remove.innerHTML = "&#10005;<span class=\"word\"> Remove</span>";
+    remove.setAttribute("aria-label", "Remove this fact");
+    remove.addEventListener("click", function () {
+      if (factList.querySelectorAll(".note-row").length <= 1) { return; }
+      row.remove();
+      refreshFacts();
+      updateChecklist();
+    });
+    row.appendChild(ta);
+    row.appendChild(remove);
+    factList.appendChild(row);
+    refreshFacts();
+    if (focus) { ta.focus(); }
+    return row;
+  }
+  addFactRow(false);
+  addFactRow(false);
+  document.getElementById("addFact").addEventListener("click", function () { addFactRow(true); });
+
+  /* Checklist */
+  var checklist = document.getElementById("checklist");
+  function setCheck(key, done) {
+    var li = checklist.querySelector("[data-check='" + key + "']");
+    if (!li) { return; }
+    li.classList.toggle("done", !!done);
+    li.querySelector(".box").textContent = done ? "\u2713" : "";
+  }
+  function placeValue() {
+    var r = document.querySelector("input[name='place']:checked");
+    return r ? r.value : "";
+  }
+  function updateChecklist() {
+    setCheck("birth", !!(val("planetName") && val("planetDob") && val("planetGalaxy") && val("planetDiameter")));
+    setCheck("colour", strokes.length > 0 || !!val("colourText"));
+    setCheck("temp", !!chipValue(tempChips) || !!val("tempText"));
+    setCheck("madeof", !!chipValue(madeChips) || !!val("madeText"));
+    setCheck("size", sizeTouched);
+    setCheck("moons", moonNames().length > 0 || document.getElementById("noMoons").checked);
+    setCheck("rings", !!chipValue(ringChips));
+    setCheck("facts", factValues().length > 0);
+    setCheck("compare", !!val("innerText") || !!val("outerText"));
+    setCheck("place", !!placeValue());
+  }
+  document.addEventListener("input", updateChecklist);
+  document.addEventListener("change", updateChecklist);
+  updateChecklist();
+
+  /* Summary */
+  function answerHtml(text, emptyText) {
+    if (!text) { return "<p class=\"empty-note\">" + emptyText + "</p>"; }
+    return "<p class=\"answer\">" + escapeHtml(text) + "</p>";
+  }
+  function listHtml(items, emptyText) {
+    if (!items.length) { return "<p class=\"empty-note\">" + emptyText + "</p>"; }
+    var html = "<ul>";
+    items.forEach(function (item) { html += "<li>" + escapeHtml(item) + "</li>"; });
+    return html + "</ul>";
+  }
+  function collectData() {
+    var rings = chipValue(ringChips);
+    var drawingUrl = "";
+    if (strokes.length > 0) {
+      try { drawingUrl = pad.toDataURL("image/png"); } catch (e) { drawingUrl = ""; }
+    }
+    return {
+      name: val("planetName"),
+      dob: val("planetDob"),
+      galaxy: val("planetGalaxy"),
+      diameter: val("planetDiameter"),
+      drawingUrl: drawingUrl,
+      painted: strokes.length > 0,
+      colourText: val("colourText"),
+      tempChip: chipValue(tempChips),
+      tempText: val("tempText"),
+      madeChip: chipValue(madeChips),
+      madeText: val("madeText"),
+      size: sizeText().replace(/^About /, "").replace(/\.$/, ""),
+      moons: moonNames(),
+      noMoons: document.getElementById("noMoons").checked,
+      rings: rings,
+      ringCount: ringCount,
+      ringText: val("ringText"),
+      facts: factValues(),
+      inner: val("innerText"),
+      outer: val("outerText"),
+      place: placeValue(),
+      placeWhy: val("placeWhy")
+    };
+  }
+  function tempSummary(d) {
+    var parts = [];
+    if (d.tempChip) { parts.push(d.tempChip); }
+    if (d.tempText) { parts.push("average temperature " + d.tempText); }
+    return parts.join(", ");
+  }
+  function madeSummary(d) {
+    var parts = [];
+    if (d.madeChip) { parts.push(d.madeChip); }
+    if (d.madeText) { parts.push(d.madeText); }
+    return parts.join(". ");
+  }
+  function ringsSummary(d) {
+    if (!d.rings) { return ""; }
+    if (d.rings === "No") { return "No rings"; }
+    var s = d.ringCount + (d.ringCount === 1 ? " ring" : " rings");
+    if (d.ringText) { s += ". " + d.ringText; }
+    return s;
+  }
+  function moonsSummary(d) {
+    if (d.moons.length) { return d.moons; }
+    return [];
+  }
+  function compileSummaryHtml(d) {
+    var html = "";
+    html += "<h3 class=\"planet-name\">" + escapeHtml(d.name || "My Planet") + "</h3>";
+    html += "<h3>My Planet Portrait</h3>";
+    if (d.drawingUrl) {
+      html += "<img class=\"drawing-img\" src=\"" + d.drawingUrl + "\" alt=\"My painting of my planet\">";
+    } else {
+      html += "<p class=\"empty-note\">No painting yet.</p>";
+    }
+    html += "<h3>Birth Certificate</h3>";
+    html += "<ul>";
+    html += "<li><strong>Name of Planet:</strong> " + escapeHtml(d.name || "not named yet") + "</li>";
+    html += "<li><strong>Date of Birth (How Many Years Ago):</strong> " + escapeHtml(d.dob || "not filled in yet") + "</li>";
+    html += "<li><strong>Galaxy of Birth:</strong> " + escapeHtml(d.galaxy || "not filled in yet") + "</li>";
+    html += "<li><strong>Diameter Across (Km):</strong> " + escapeHtml(d.diameter || "not filled in yet") + "</li>";
+    html += "</ul>";
+    html += "<h3>What color is my planet?</h3>";
+    html += answerHtml(d.colourText, "Nothing added yet.");
+    html += "<h3>Average temperature</h3>";
+    html += answerHtml(tempSummary(d), "Nothing added yet.");
+    html += "<h3>What my planet is made of</h3>";
+    html += answerHtml(madeSummary(d), "Nothing added yet.");
+    html += "<h3>Size</h3>";
+    html += "<p class=\"answer\">" + escapeHtml(d.size) + ".</p>";
+    html += "<h3>Moons</h3>";
+    if (d.moons.length) { html += listHtml(d.moons, ""); }
+    else if (d.noMoons) { html += "<p class=\"answer\">My planet has no moons.</p>"; }
+    else { html += "<p class=\"empty-note\">No moons added yet.</p>"; }
+    html += "<h3>Rings</h3>";
+    html += answerHtml(ringsSummary(d), "Not decided yet.");
+    html += "<h3>Interesting Facts about My Planet</h3>";
+    html += listHtml(d.facts, "No facts added yet.");
+    html += "<h3>Similar to the Inner Planets</h3>";
+    html += answerHtml(d.inner, "Nothing added yet.");
+    html += "<h3>Similar to the Outer Planets</h3>";
+    html += answerHtml(d.outer, "Nothing added yet.");
+    html += "<h3>Where my planet belongs</h3>";
+    html += answerHtml(d.place, "Not chosen yet.");
+    html += answerHtml(d.placeWhy, "");
+    html += "<p class=\"intro\" style=\"margin-top:16px;\">Take a break from your screen before continuing to the next activity.</p>";
+    return html;
+  }
+  function compileSummaryText(d) {
+    var lines = ["My Planet Profile", "Grade 9 STEAM, Beyond Our Planet, Lesson 6: Design Your Own Planet", ""];
+    function qa(title, text) {
+      lines.push(title);
+      lines.push(text || "(Nothing added yet.)");
+      lines.push("");
+    }
+    function block(title, items, emptyText) {
+      lines.push(title);
+      if (items.length) { items.forEach(function (item) { lines.push("- " + item); }); }
+      else { lines.push("(" + emptyText + ")"); }
+      lines.push("");
+    }
+    lines.push("Name of Planet: " + (d.name || "My Planet"));
+    lines.push("Date of Birth (How Many Years Ago): " + (d.dob || "not filled in yet"));
+    lines.push("Galaxy of Birth: " + (d.galaxy || "not filled in yet"));
+    lines.push("Diameter Across (Km): " + (d.diameter || "not filled in yet"));
+    lines.push("");
+    lines.push("My planet portrait: " + (d.painted ? "painted on the page (see the printed copy)" : "no painting yet"));
+    lines.push("");
+    qa("What color is my planet?", d.colourText);
+    qa("Average temperature", tempSummary(d));
+    qa("What my planet is made of", madeSummary(d));
+    lines.push("Size: " + d.size + ".");
+    lines.push("");
+    if (d.moons.length) { block("Moons", d.moons, ""); }
+    else if (d.noMoons) { lines.push("Moons: My planet has no moons."); lines.push(""); }
+    else { lines.push("Moons: (No moons added yet.)"); lines.push(""); }
+    qa("Rings", ringsSummary(d) || "Not decided yet.");
+    block("Interesting Facts about My Planet", d.facts, "No facts added yet.");
+    qa("Similar to the Inner Planets", d.inner);
+    qa("Similar to the Outer Planets", d.outer);
+    qa("Where my planet belongs", d.place);
+    qa("Why I placed it there", d.placeWhy);
+    lines.push("Take a break from your screen before continuing to the next activity.");
+    return lines.join("\n");
+  }
+
+  var board = document.getElementById("board");
+  var summary = document.getElementById("summary");
+  var summaryBody = document.getElementById("summaryBody");
+  var copyNote = document.getElementById("copyNote");
+
+  document.getElementById("finishBtn").addEventListener("click", function () {
+    var data = collectData();
+    summaryBody.innerHTML = compileSummaryHtml(data);
+    summary.classList.remove("hidden");
+    board.classList.add("hidden");
+    copyNote.textContent = "";
+    document.getElementById("h-summary").setAttribute("tabindex", "-1");
+    document.getElementById("h-summary").focus();
+    window.scrollTo(0, 0);
+  });
+  document.getElementById("backBtn").addEventListener("click", function () {
+    summary.classList.add("hidden");
+    board.classList.remove("hidden");
+    window.scrollTo(0, 0);
+  });
+  document.getElementById("printBtn").addEventListener("click", function () { window.print(); });
+  document.getElementById("copyBtn").addEventListener("click", function () {
+    var text = compileSummaryText(collectData());
+    function done() { copyNote.textContent = "Copied. You can paste your planet profile wherever you keep your work."; }
+    function fallback() {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        done();
+      } catch (e) {
+        copyNote.textContent = "Copy did not work here. Try printing your profile instead.";
+      }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
+  });
+})();
+</script>
+</body>
+</html>
